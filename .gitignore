@@ -5,6 +5,3 @@ node_modules
 grafana-data
 mysql-data
 prometheus-data
-.dockerignore
-Dockerfile
-docker-compose.yml
