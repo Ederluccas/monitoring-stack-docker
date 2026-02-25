@@ -1,32 +1,42 @@
-version: '3.8'
-
 services:
 
   mysql-server:
     image: mysql:8.0
     container_name: mysql-server
     environment:
-      MYSQL_DATABASE: "zabbix"
-      MYSQL_USER: "zabbix"
-      MYSQL_PASSWORD: "zabbix"
-      MYSQL_ROOT_PASSWORD: "zabbix"
-    command: --character-set-server=utf8 --collation-server=utf8_bin
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-zabbix}
+      MYSQL_USER: ${MYSQL_USER:-zabbix}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-zabbix}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-zabbix}
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_bin
+      --default-authentication-plugin=mysql_native_password
+      --log-bin-trust-function-creators=1
     volumes:
       - mysql-data:/var/lib/mysql
     restart: unless-stopped
     networks:
       - zabbix-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${MYSQL_USER:-zabbix}", "-p${MYSQL_PASSWORD:-zabbix}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   zabbix-server:
     image: zabbix/zabbix-server-mysql:latest
     container_name: zabbix-server
     environment:
-      DB_SERVER_HOST: "mysql-server"
-      MYSQL_DATABASE: "zabbix"
-      MYSQL_USER: "zabbix"
-      MYSQL_PASSWORD: "zabbix"
+      DB_SERVER_HOST: mysql-server
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-zabbix}
+      MYSQL_USER: ${MYSQL_USER:-zabbix}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-zabbix}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-zabbix}
+      ZBX_DB_FORCE_INIT: "true"
     depends_on:
-      - mysql-server
+      mysql-server:
+        condition: service_healthy
     ports:
       - "10051:10051"
     restart: unless-stopped
@@ -37,12 +47,12 @@ services:
     image: zabbix/zabbix-web-apache-mysql:latest
     container_name: zabbix-web
     environment:
-      ZBX_SERVER_HOST: "zabbix-server"
-      DB_SERVER_HOST: "mysql-server"
-      MYSQL_DATABASE: "zabbix"
-      MYSQL_USER: "zabbix"
-      MYSQL_PASSWORD: "zabbix"
-      PHP_TZ: "America/Sao_Paulo"
+      ZBX_SERVER_HOST: zabbix-server
+      DB_SERVER_HOST: mysql-server
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-zabbix}
+      MYSQL_USER: ${MYSQL_USER:-zabbix}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-zabbix}
+      PHP_TZ: ${TZ:-America/Sao_Paulo}
     depends_on:
       - zabbix-server
     ports:
@@ -55,10 +65,8 @@ services:
     image: zabbix/zabbix-agent2:latest
     container_name: zabbix-agent2
     environment:
-      ZBX_HOSTNAME: "Zabbix server"
-      ZBX_SERVER_HOST: "zabbix-server"
-    depends_on:
-      - zabbix-server
+      ZBX_HOSTNAME: Zabbix-server
+      ZBX_SERVER_HOST: zabbix-server
     restart: always
     networks:
       - zabbix-net
