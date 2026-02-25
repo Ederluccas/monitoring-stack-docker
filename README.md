@@ -54,24 +54,6 @@ docker-compose up -d
 
 ---
 
-## 🔐 Credenciais Padrão
-
-### Grafana
-- URL: http://localhost:3000
-- Usuário: `admin`
-- Senha: `admin` (será solicitada troca no primeiro acesso)
-
-### Zabbix
-- URL: http://localhost
-- Usuário: `Admin` (com A maiúsculo)
-- Senha: `zabbix`
-
-### Prometheus
-- URL: http://localhost:9090
-- Sem autenticação
-
----
-
 ## ⚠️ Segurança
 
 **NÃO USE AS SENHAS PADRÃO EM PRODUÇÃO!**
