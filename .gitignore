@@ -1,7 +1,11 @@
 .env
+.env.example
 *.sql
 *.log
 node_modules
 grafana-data
 mysql-data
 prometheus-data
+.dockerignore
+docker-compose.yml
+init-db.sql
